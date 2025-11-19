@@ -1,0 +1,18 @@
+name: daily_revenue_by_country
+schedule: "0 3 * * *"   # cron, runs at 03:00 UTC daily
+
+sql_template: "daily_revenue_by_country.sql.j2"
+destination_table: "analytics.daily_revenue_by_country"
+write_disposition: "WRITE_TRUNCATE"
+
+labels:
+  owner: "analytics"
+  domain: "revenue"
+  environment: "prod"
+  cost_center: "revenue_analytics"
+
+parameters:
+  days_back: 1
+
+limits:
+  max_bytes_billed: 50000000000  # 50 GB

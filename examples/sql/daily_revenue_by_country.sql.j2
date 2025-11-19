@@ -1,0 +1,6 @@
+SELECT
+  country,
+  SUM(revenue) AS total_revenue
+FROM `raw.orders`
+WHERE order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL {{ days_back }} DAY)
+GROUP BY country

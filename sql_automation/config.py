@@ -63,7 +63,6 @@ class JobSpec(BaseModel):
     def validate_schedule(cls, v: str) -> str:
         """
         Basic validation: either cron or a string like 'every ...'.
-        A real team might tighten this according to its own rules.
         """
         v_stripped = v.strip()
         if v_stripped.lower().startswith("every "):

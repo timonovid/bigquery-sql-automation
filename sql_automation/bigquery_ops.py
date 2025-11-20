@@ -21,8 +21,8 @@ class ParsedTableId:
 
 def parse_table_id(destination_table: str, default_project: str) -> ParsedTableId:
     """
-    Принимает 'dataset.table' или 'project.dataset.table',
-    возвращает ParsedTableId с подставленным default_project при необходимости.
+    Accepts 'dataset.table' or 'project.dataset.table' and returns ParsedTableId
+    with default_project applied when needed.
     """
     parts = destination_table.split(".")
     if len(parts) == 2:
@@ -44,8 +44,8 @@ def dry_run_query(
     job_spec: JobSpec,
 ) -> Tuple[int, float]:
     """
-    Делает dry-run BigQuery запроса и возвращает (estimated_bytes, total_slot_ms).
-    Бросает исключение при ошибках.
+    Runs a BigQuery dry-run and returns (estimated_bytes, total_slot_ms).
+    Raises an exception on errors.
     """
     job_config = bigquery.QueryJobConfig(
         dry_run=True,
@@ -56,8 +56,8 @@ def dry_run_query(
 
     logger.info("Starting dry-run for job '%s'", job_spec.name)
     job = client.query(sql, job_config=job_config)
-    # в dry-run job не исполняется, но метаданные доступны
-    stats = job._job_statistics()  # не самый официальный API, но работает; можно взять job._properties
+    # In a dry-run the job is not executed, but metadata is available
+    stats = job._job_statistics()  # not the most official API, but works; could use job._properties
     estimated_bytes = int(stats.get("totalBytesProcessed", 0))
     slot_ms = float(stats.get("totalSlotMs", 0))
 
@@ -83,8 +83,8 @@ def deploy_scheduled_query(
     location: str = "US",
 ) -> None:
     """
-    Создаёт или обновляет BigQuery Scheduled Query через DataTransferService.
-    Предполагается, что аутентификация уже настроена через ADC.
+    Creates or updates a BigQuery Scheduled Query through DataTransferService.
+    Assumes authentication is already configured via ADC.
     """
 
     parsed = parse_table_id(job_spec.destination_table, default_project)
@@ -93,12 +93,12 @@ def deploy_scheduled_query(
 
     parent = transfer_client.common_project_path(parsed.project_id)
 
-    # Параметры для data source 'scheduled_query'
+    # Parameters for the 'scheduled_query' data source
     params = {
         "query": sql,
         "destination_table_name_template": parsed.table_id,
         "write_disposition": job_spec.write_disposition,
-        "partitioning_field": "",  # можно задать при необходимости
+        "partitioning_field": "",  # can be set if needed
     }
 
     transfer_config = bigquery_datatransfer_v1.TransferConfig(
@@ -110,7 +110,7 @@ def deploy_scheduled_query(
         disabled=False,
     )
 
-    # Попробуем найти существующую конфигурацию с тем же display_name и dataset
+    # Try to find an existing configuration with the same display_name and dataset
     logger.info(
         "Deploying scheduled query '%s' to dataset '%s.%s' (project=%s)",
         job_spec.name,
@@ -130,16 +130,16 @@ def deploy_scheduled_query(
             break
 
     if existing is None:
-        # создаём новую конфигурацию
+        # create a new configuration
         created = transfer_client.create_transfer_config(
             parent=parent,
             transfer_config=transfer_config,
         )
         logger.info("Created new scheduled query config: %s", created.name)
     else:
-        # обновляем существующую
+        # update the existing configuration
         transfer_config.name = existing.name
-        # указываем, какие поля обновляем
+        # specify which fields we are updating
         update_mask = {"paths": ["params", "schedule", "display_name"]}
         updated = transfer_client.update_transfer_config(
             transfer_config=transfer_config,

@@ -98,7 +98,7 @@ def cmd_deploy(args: argparse.Namespace) -> int:
         logger.error("--project is required for deploy")
         return 1
 
-    # dry-run перед деплоем (можно сделать опциональным, но по статье лучше обязательный)
+    # dry-run before deployment (could be optional, but recommended to keep mandatory per guidance)
     client = bigquery.Client(project=project_id)
     try:
         dry_run_query(

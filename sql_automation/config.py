@@ -43,7 +43,7 @@ class JobSpec(BaseModel):
     )
     limits: Limits
 
-    # опциональные поля для более строгой политики
+    # optional fields for stricter policies
     environment: Optional[str] = Field(
         default=None,
         description="Environment name like dev/stage/prod, often duplicated in labels.",
@@ -62,13 +62,13 @@ class JobSpec(BaseModel):
     @classmethod
     def validate_schedule(cls, v: str) -> str:
         """
-        Простейшая проверка: либо cron, либо строка вида 'every ...'
-        Реальная команда может ужесточить это под свои правила.
+        Basic validation: either cron or a string like 'every ...'.
+        A real team might tighten this according to its own rules.
         """
         v_stripped = v.strip()
         if v_stripped.lower().startswith("every "):
             return v_stripped
-        # допускаем cron-строки через CronSlices
+        # allow cron strings validated via CronSlices
         if not CronSlices.is_valid(v_stripped):
             raise ValueError(
                 f"schedule must be valid cron or 'every ...' string, got '{v_stripped}'"
@@ -79,7 +79,7 @@ class JobSpec(BaseModel):
     @classmethod
     def validate_destination_table(cls, v: str) -> str:
         raw = v.strip()
-        # допускаем 'project.dataset.table' или 'dataset.table'
+        # allow 'project.dataset.table' or 'dataset.table'
         parts = raw.split(".")
         if len(parts) not in (2, 3):
             raise ValueError(
@@ -100,7 +100,7 @@ class JobSpec(BaseModel):
             raise ValueError(
                 f"environment must be one of dev/stage/prod (from field or labels), got '{env}'"
             )
-        # синхронизируем environment с labels
+        # keep environment synchronized with labels
         self.environment = env
         self.labels["environment"] = env
         return self
